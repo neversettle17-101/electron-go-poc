@@ -26,8 +26,8 @@ function spawnGoBackend() {
 
     // `go run` is fine for a PoC. In production you'd ship a pre-built binary
     // bundled into the Electron app (electron-builder's extraResources).
-    const proc = spawn("go", ["run", "./go-backend"], {
-      cwd: __dirname,
+    const proc = spawn("go", ["run", "."], {
+      cwd: path.join(__dirname, "go-backend"),
       env: { ...process.env, AO_TOKEN: goToken },
       stdio: ["ignore", "pipe", "pipe"],
     });
@@ -65,23 +65,23 @@ function spawnGoBackend() {
   });
 }
 
-// ---------- IPC handlers (the "renderer-facing contract") ----------
-
-ipcMain.handle("greet", async (_event, name) => {
-  if (!goEndpoint) throw new Error("Go backend not ready");
-  const res = await fetch(`${goEndpoint}/greet?name=${encodeURIComponent(name)}`, {
-    headers: { Authorization: `Bearer ${goToken}` },
-  });
-  if (!res.ok) throw new Error(`Go returned ${res.status}`);
-  return res.json();
-});
-
-ipcMain.handle("status", async () => ({
-  endpoint: goEndpoint,
-  alive: goProcess !== null,
-}));
-
 // ---------- Window + app lifecycle ----------
+
+function registerIpcHandlers() {
+  ipcMain.handle("greet", async (_event, name) => {
+    if (!goEndpoint) throw new Error("Go backend not ready");
+    const res = await fetch(`${goEndpoint}/greet?name=${encodeURIComponent(name)}`, {
+      headers: { Authorization: `Bearer ${goToken}` },
+    });
+    if (!res.ok) throw new Error(`Go returned ${res.status}`);
+    return res.json();
+  });
+
+  ipcMain.handle("status", async () => ({
+    endpoint: goEndpoint,
+    alive: goProcess !== null,
+  }));
+}
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -98,6 +98,7 @@ function createWindow() {
 
 app.whenReady().then(async () => {
   try {
+    registerIpcHandlers();
     await spawnGoBackend();
     console.log(`[main] Go backend ready at ${goEndpoint}`);
     createWindow();
