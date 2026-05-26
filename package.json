@@ -1,0 +1,12 @@
+{
+  "name": "electron-go-poc",
+  "version": "0.1.0",
+  "description": "Minimal Electron + Go sidecar PoC",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^32.0.0"
+  }
+}

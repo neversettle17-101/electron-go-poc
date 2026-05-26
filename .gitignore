@@ -1,0 +1,5 @@
+node_modules/
+go-backend/go-backend
+go-backend/*.exe
+dist/
+out/
